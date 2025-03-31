@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { addPasstes, updateToPastes } from '../redux/pasteSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { addPastes, updateToPastes } from '../redux/pasteSlice';
 
 const Home = () => {
 
@@ -13,12 +13,27 @@ const pasteId = searchParams.get("pasteId");
 
 const dispatch = useDispatch();   //dispatcher to dispatch reducer functions from slice
 
+const allPastes = useSelector((state) => state.paste.pastes); //get all pastes saved in local storage
+
+
+//logic to what effect we want if we click at edit button (pasteId exist)
+//first thing button will be changed to "Update paste", that is already handled
+//Now also we need to fetch and set particular paste title and value that depends upon our pasteId. This can be done using useEffect
+useEffect(() => {
+   if(pasteId){
+    const paste = allPastes.find((p) => p._id === pasteId)  //get that paste (of pasteId's id)
+    setTitle(paste.title); //set title accordingly
+    setValue(paste.content);
+   }
+}, [pasteId])
+
+
 // logic of to what will happen if we clicks in "Create my Paste" vutton.Finally we want to create entire data of our paste and to send it to slice
 //and then slice will verify the data and will save that in local storage
       function createPaste(){
         //create
         const paste = {
-        titte: title,
+        title: title,
         content: value,
          _id: pasteId || Date.now().toString(36), //if already we have then use that or create according to date 
          createdAt: new Date().toISOString(),
@@ -30,7 +45,7 @@ const dispatch = useDispatch();   //dispatcher to dispatch reducer functions fro
          dispatch(updateToPastes(paste));  //paste as a payload
        }
        else{
-           dispatch(addPasstes(paste));
+           dispatch(addPastes(paste));
        }
 
        //after creation or updation, move to blank home page again
@@ -63,10 +78,16 @@ const dispatch = useDispatch();   //dispatcher to dispatch reducer functions fro
        Now, which paste we are editing specifically? UI will be same but content while editing will be differ acoording to different pastes
        Means we should create pasteIds for all different pastes. TO create that we can use useSearchParams hook. */}
           <button
-            onClick={createPaste}
             className="px-4 py-3 bg-[#3b3055] text-white rounded-sm shadow-md hover:bg-[#4c3c70] hover:text-gray-200 transition duration-200"
+            onClick={() => {
+              if (title.trim() && value.trim()) {
+                createPaste();
+              } else {
+                alert("Please Write Something To Create");
+              }
+            }}
           >
-            {pasteId ? "Update My Paste" : "Create My Paste"}
+            {pasteId ? "Update Paste" : "Create Paste"}
           </button>
         </div>
 
